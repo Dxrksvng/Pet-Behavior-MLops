@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 # ----- ตั้งค่า API Key และโมเดล -----
 # ไม่ต้องเขียน os.environ["TOGETHER_API_KEY"] = "..." ตรงนี้
 model_name = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
-together.api_key = "3c73cda46d9b41c8a1c58cc34871a660e50e94a220444eb72fb2bb3807f4c24e"
+together.api_key = os.environ.get('TOGETHER_API_KEY')
 
 # จากนี้ไปคุณสามารถใช้งาน together.api_key ได้ตามปกติ
 
