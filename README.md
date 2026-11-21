@@ -4,7 +4,7 @@
 
 ![Backend Flask](https://img.shields.io/badge/Backend-Flask-000000?style=for-the-badge&logo=flask&logoColor=white) ![UI Gradio](https://img.shields.io/badge/UI-Gradio-F97316?style=for-the-badge) ![Retrieval FAISS](https://img.shields.io/badge/Retrieval-FAISS-0467DF?style=for-the-badge) ![Embeddings BAAI/bge-m3](https://img.shields.io/badge/Embeddings-BAAI%2Fbge--m3-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black) ![LLM Llama 3.3 70B via Together](https://img.shields.io/badge/LLM-Llama_3.3_70B_(Together)-7C3AED?style=for-the-badge) ![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-> **Status: course/MLOps prototype, not production.** Several security issues are documented honestly in [Security and limitations](#security-and-limitations); the most important are a credential hard-coded in the backend source and unsalted password hashing in the frontend. Do not deploy as-is.
+> **Status: course/MLOps prototype, not production.** Several security issues are documented honestly in [Security and limitations](#security-and-limitations); the most important are a previously exposed credential in Git history and unsalted password hashing in the frontend. Do not deploy as-is.
 >
 > **Note on the previous README:** the old README described a different project (a "Pet Match" breed recommender using OpenAI and `all_animal_breeds.csv`). That does not match the code in this repository, which is the pet **behavior** chatbot described below. The breed recommender lives in the sibling repo `pet-match-mlops`.
 
@@ -226,7 +226,7 @@ Then open `http://localhost:8085`.
 
 - `frontend.py` posts to a hard-coded backend URL (`http://35.247.140.245:8087/generate`), not to the Compose `backend` service. To use your own backend, edit `get_pet_advice`.
 - `backend/requirements.txt` and `frontend/requirements.txt` are UTF-16 encoded; some pip versions may not read them. Re-save as UTF-8 if install fails.
-- `backend/Dockerfile` copies `faiss_index/` into the image but does not set any Together key; the key is currently inside the source (see below).
+- `backend/Dockerfile` copies `faiss_index/` into the image but does not set any Together key; set `TOGETHER_API_KEY` in the runtime environment.
 
 ## Testing and evaluation
 
@@ -238,7 +238,7 @@ There are no automated tests, no retrieval metrics and no answer-quality evaluat
 
 | Issue | Detail | Recommended fix |
 |---|---|---|
-| Hard-coded API credential | `backend/app.py` assigns a Together API key as a string literal. It is in git history and must be treated as leaked: **revoke and rotate it**, then load from an environment variable (a `.env` loader import already exists but is unused). | Rotate, use env var / secret manager, scan history with gitleaks. |
+| Hard-coded API credential | A Together API key was previously committed and remains in Git history. The current code reads `TOGETHER_API_KEY` from the environment. **Revoke and rotate the old key.** | Rotate, use env var / secret manager, scan history with gitleaks. |
 | Weak password storage | Frontend stores unsalted SHA-256 hashes. | Use bcrypt/argon2 with per-user salt. |
 | Unauthenticated, plain-HTTP API | The frontend calls the backend over `http://` to a hard-coded public IP; the API has no auth or rate limit. | TLS, auth token, rate limiting, config via env var. |
 | Unsafe deserialization flag | FAISS is loaded with `allow_dangerous_deserialization=True`; only load indexes you built yourself. | Keep index provenance; sign or hash index files. |
